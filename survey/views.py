@@ -107,8 +107,6 @@ class DisplaySurvey(generics.ListAPIView):
         else:
             return CustomResponse().errorResponse("No such survey present")
 
-# Call this API when the user submit the survey to store the responses
-
 
 class TakeSurvey(generics.CreateAPIView):
     permission_classes = (IsAuthenticated,)
@@ -130,6 +128,9 @@ class TakeSurvey(generics.CreateAPIView):
 
         for ans in answers:
             quesObj = SurveyQuestions.objects.filter(questionId=ans[0]).first()
+            if not quesObj:
+                return CustomResponse().errorResponse([ans[0]], description="No question with the given id present")
+
             if ans[1].lower() == "true":
                 quesObj.trueCount += 1
             elif ans[1].lower() == 'false':
