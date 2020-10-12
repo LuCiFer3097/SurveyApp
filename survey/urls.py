@@ -6,5 +6,7 @@ urlpatterns = [path("createUser/", createUser.as_view()),
                path("takeSurvey/", TakeSurvey.as_view()),
                path("storeResponses/", StoreResponses.as_view()),
                path("displayResults/", ShowResults.as_view()),
+
+               # BONUS
                path("generateThumbnail/", CreateThumbNail.as_view())
                ]

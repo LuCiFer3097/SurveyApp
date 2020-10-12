@@ -89,7 +89,6 @@ class TakeSurvey(generics.ListAPIView):
 
     def get(self, request):
         surveyId = request.GET.get("surveyId")
-        print(request.user.username)
         surveyObj = SurveyQuestions.objects.filter(surveyId=surveyId)
 
         if surveyObj:
