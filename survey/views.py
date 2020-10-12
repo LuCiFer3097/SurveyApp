@@ -84,7 +84,7 @@ class CreateSurvey(generics.CreateAPIView):
             return CustomResponse().errorResponse(serializer.errors, description="Cannot create the survey")
 
 
-class TakeSurvey(generics.ListAPIView):
+class DisplaySurvey(generics.ListAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
@@ -110,16 +110,21 @@ class TakeSurvey(generics.ListAPIView):
 # Call this API when the user submit the survey to store the responses
 
 
-class StoreResponses(generics.CreateAPIView):
+class TakeSurvey(generics.CreateAPIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
         answers = request.data.get("responses")
         surveyId = request.data.get("surveyId")
 
-        # Checking If the user has already given the survey
+        surveyObj = Survey.objects.filter(surveyId=surveyId)
         ansObj = UserAnswers.objects.filter(
             surveyId=surveyId, user=request.user.username)
+
+        # Checking if a survey exists
+        if not surveyObj:
+            return CustomResponse().errorResponse(description="There is no survey with such ID present")
+        # Checking If the user has already given the survey
         if ansObj:
             return CustomResponse().errorResponse(description="you have already given the survey")
 
@@ -203,11 +208,19 @@ class ShowResults(generics.CreateAPIView):
     def post(self, request):
         try:
             surveyId = request.data.get("surveyId")
+            responseObj = UserAnswers.objects.filter(surveyId=surveyId)
             surveyObj = Survey.objects.filter(surveyId=surveyId).first()
+
+            # Few corner cases checks
+            if not surveyObj:
+                return CustomResponse().errorResponse(description="There is no survey with such ID present")
+            if not responseObj:
+                return CustomResponse().errorResponse(description="No one has taken the survey yet.")
 
             questionInsight = self.GetQuestionInsights(surveyId)
             individualInsight, totalResponse, Users = self.GetIndividualInsight(
                 surveyId)
+
             finalResult = {"Survey": surveyObj.surveyName,
                            "TotalResponses": totalResponse,
                            "PersonWhoDidTheSurvey": Users,
@@ -215,7 +228,7 @@ class ShowResults(generics.CreateAPIView):
                            "IndividualInsight": individualInsight}
             return CustomResponse().successResponse(finalResult, description="Displaying the Results")
         except Exception as error:
-            return CustomResponse().errorResponse(description="Cannot display the Results")
+            return CustomResponse().errorResponse(str(error), description="Cannot display the Results")
 
 
 # BONUS
